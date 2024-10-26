@@ -7,9 +7,10 @@ const organizationSchema = new mongoose.Schema({
     {
       name: String,
       email: String,
-      accessLevel: { type: String, default: 'member' }
-    }
-  ]
+      accessLevel: { type: String, default: 'member' },
+    },
+  ],
+  creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to User model
 });
 
 module.exports = mongoose.model('Organization', organizationSchema);
