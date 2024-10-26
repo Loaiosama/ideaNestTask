@@ -8,6 +8,7 @@ router.put('/organization/:id', authenticateToken, orgController.updateOrganizat
 router.delete('/organization/:id', authenticateToken, orgController.deleteOrganization);
 router.get('/organization/:id', orgController.getOrganization);
 router.get('/organization', orgController.getAllOrganizations);
+router.post('/organization/:id/invite',authenticateToken, orgController.inviteToOrganization);
 
 
 module.exports = router;

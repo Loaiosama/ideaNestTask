@@ -1,4 +1,7 @@
 const Organization = require('../models/organization');
+const User = require('../models/user');
+const { sendEmail } = require('../utils/email');
+
 
 // Create a new organization
 exports.createOrganization = async (req, res) => {
@@ -46,41 +49,43 @@ exports.updateOrganization = async (req, res) => {
   }
 };
 
-exports.deleteOrganization = async (req, res) =>{
-    const {orgId} = req.param;
-    const {creatorId} = req.user._id;
+exports.deleteOrganization = async (req, res) => {
+    const { id } = req.params; // Ensure `orgId` matches the request URL parameter
 
     try {
+        console.log(id);
+        const organization = await Organization.findById(id); // Find organization first
 
-        const organization = await Organization.findByIdAndDelete(id);
-
-        if (!organization){
-
+        if (!organization) {
             return res.status(404).json({ message: 'Organization not found' });
         } 
 
-        if(creatorId.toString() !== organization.creator.toString()){
+        // Check if the requesting user is the creator
+        if (organization.creator.toString() !== req.user._id.toString()) {
             return res.status(403).json({
                 message: "Not allowed; only creator can delete organization"
-            })
+            });
         }
+
+        // Now delete the organization
+        await Organization.findByIdAndDelete(id);
 
         res.status(200).json({ message: 'Organization deleted successfully' });
 
-    }catch (error) {
-
+    } catch (error) {
         res.status(500).json({ message: 'Error deleting organization', error });
     }
-    
-}
+};
+
+
 
 exports.getOrganization = async (req, res) => {
 
-    const {orgId} = req.param;
+    const {id} = req.params;
 
     try {
         
-        const organization = Organization.findById(orgId);
+        const organization = await Organization.findById(id);
         if(!organization){
             return res.status(404).json({
                 message: "Organization does not exist."
@@ -88,7 +93,7 @@ exports.getOrganization = async (req, res) => {
         }
 
         res.status(200).json({
-            message: "Organization found successfully.",
+            message: "Organization retrieved successfully.",
             organization
         })
 
@@ -105,17 +110,17 @@ exports.getAllOrganizations = async (req, res) => {
 
     try {
 
-        const organization = Organization.find();
+        const organizations = await Organization.find();
 
-        if(!organization){
+        if(!organizations){
             return res.status(404).json({
                 message: "No organizations exist."
             })
         }
 
         res.status(200).json({
-            message: "Organizations found successfully.",
-            organization
+            message: "Organizations retrieved successfully.",
+            organizations
         })
         
     } catch (error) {
@@ -126,3 +131,51 @@ exports.getAllOrganizations = async (req, res) => {
     }
 
 }
+
+
+exports.inviteToOrganization = async (req, res) => {
+    const { email } = req.body;
+    const { id} = req.params;
+    const invitingUserId = req.user._id; // Get the ID of the authenticated user
+
+    try {
+        // Check if organization exists
+        const organization = await Organization.findById(id);
+        if (!organization) {
+            return res.status(404).json({ message: 'Organization not found' });
+        }
+
+        // Check if the authenticated user is the creator
+        if (organization.creator.toString() !== invitingUserId.toString()) {
+            return res.status(403).json({ message: 'Only the creator can invite users to this organization' });
+        }
+
+        // Check if the user being invited exists
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Check if user is already a member of the organization
+        const isMember = organization.members.some(member => member.email === email);
+        if (isMember) {
+            return res.status(400).json({ message: 'User is already a member of the organization' });
+        }
+
+        // Add user to organization members
+        organization.members.push({
+            name: user.name,
+            email: user.email,
+            accessLevel: 'member' // Default access level
+        });
+        await organization.save();
+
+        // Send email invitation
+        await sendEmail(email, `Invitation to join ${organization.name}`);
+
+        res.json({ message: 'User invited successfully' });
+        
+    } catch (error) {
+        res.status(500).json({ message: 'Error inviting user', error });
+    }
+};
