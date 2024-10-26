@@ -73,3 +73,30 @@ exports.deleteOrganization = async (req, res) =>{
     }
     
 }
+
+exports.getOrganization = async (req, res) => {
+
+    const {orgId} = req.param;
+
+    try {
+        
+        const organization = Organization.findById(orgId);
+        if(!organization){
+            return res.status(404).json({
+                message: "Organization does not exist."
+            })
+        }
+
+        res.status(200).json({
+            message: "Organization found successfully.",
+            organization
+        })
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal server error",
+            error
+        })
+        
+    }
+}
