@@ -6,7 +6,9 @@ exports.authenticateToken = (req, res, next) => {
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) return res.sendStatus(403);
-    req.user = user;
+    req.user = user; // This should contain the user's ID
+    console.log('Authenticated user ID:', req.user._id); // Log for debugging
     next();
   });
 };
+

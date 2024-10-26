@@ -4,6 +4,7 @@ const Organization = require('../models/organization');
 exports.createOrganization = async (req, res) => {
   try {
     const { name, description } = req.body;
+    console.log(req.user._id);
 
     // Use req.user._id to get the ID of the authenticated user (creator)
     const organization = await Organization.create({ 
@@ -39,9 +40,32 @@ exports.updateOrganization = async (req, res) => {
     Object.assign(organization, updates);
     await organization.save();
 
-    res.json({ message: 'Organization updated successfully', organization });
+    res.json({ message: 'Organization updated successfully',organization_id: organization.id, name: organization.name, description: organization.description });
   } catch (error) {
     res.status(500).json({ message: 'Error updating organization', error });
   }
 };
 
+exports.deleteOrganization = async (req, res) =>{
+    const {orgId} = req.param;
+
+    try {
+
+        const organization = await Organization.findByIdAndDelete(id);
+
+        if (!organization){
+            
+            return res.status(404).json({ message: 'Organization not found' });
+        } 
+
+        res.json({ message: 'Organization deleted successfully' });
+
+    }catch (error) {
+
+        res.status(500).json({ message: 'Error deleting organization', error });
+    }
+    
+    
+
+
+}
