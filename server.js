@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/authRoutes');
+const organizationRoutes = require('./routes/organizationRoutes');
+
 require('dotenv').config();
 
 const app = express();
@@ -13,6 +15,8 @@ app.use((req, res, next) => {
 });
 
 app.use('/api', authRoutes);
+app.use('/org', organizationRoutes);
+
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
