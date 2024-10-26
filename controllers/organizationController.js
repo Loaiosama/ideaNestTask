@@ -48,24 +48,28 @@ exports.updateOrganization = async (req, res) => {
 
 exports.deleteOrganization = async (req, res) =>{
     const {orgId} = req.param;
+    const {creatorId} = req.user._id;
 
     try {
 
         const organization = await Organization.findByIdAndDelete(id);
 
         if (!organization){
-            
+
             return res.status(404).json({ message: 'Organization not found' });
         } 
 
-        res.json({ message: 'Organization deleted successfully' });
+        if(creatorId.toString() !== organization.creator.toString()){
+            return res.status(403).json({
+                message: "Not allowed; only creator can delete organization"
+            })
+        }
+
+        res.status(200).json({ message: 'Organization deleted successfully' });
 
     }catch (error) {
 
         res.status(500).json({ message: 'Error deleting organization', error });
     }
     
-    
-
-
 }

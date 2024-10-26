@@ -4,7 +4,8 @@ const { authenticateToken } = require('../middleware/auth');
 const router = express.Router();
 
 router.post('/organization', authenticateToken, orgController.createOrganization);
-router.put('/organizations/:id', authenticateToken, orgController.updateOrganization);
+router.put('/organization/:id', authenticateToken, orgController.updateOrganization);
+router.delete('/organization/:id', authenticateToken, orgController.deleteOrganization);
 
 
 module.exports = router;
